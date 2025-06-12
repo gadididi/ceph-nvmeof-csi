@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvmeof-csi-config
+data: # TODO- change it to be dynamic depending on the cluster
+  config.json: |-
+    {
+      "nodes": [
+        {
+          "name": "nvmeof-gateway-node",
+          "grpcAddress": "10.242.64.32:5500", 
+          "targetType": "nvme-tcp",
+          "targetAddr": "10.242.64.32",
+          "targetPort": 4420
+        }
+      ]
+    }
