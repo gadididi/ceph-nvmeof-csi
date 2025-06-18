@@ -6,6 +6,7 @@ kind: DaemonSet
 apiVersion: apps/v1
 metadata:
   name: nvmeof-csi-node
+  namespace: kube-system
 spec:
   selector:
     matchLabels:

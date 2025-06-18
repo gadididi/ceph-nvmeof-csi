@@ -16,3 +16,4 @@ parameters:
   transport: "tcp"
 reclaimPolicy: Delete
 volumeBindingMode: Immediate
+allowVolumeExpansion: true  # Added for resize support

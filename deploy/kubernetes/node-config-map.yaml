@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nvmeof-csi-nodeservercm
+  namespace: kube-system
+  labels:
+    app: nvmeof-csi
+data:
+  config.json: |-
+    {
+      "logLevel": "info",
+      "nvmeConnectTimeout": "30s"
+    }
+
+ # TODO - investigate how to use this config map in the node server and then add it.   
+#   config.json: |-
+# {
+#   "nvme": {
+#     "connectTimeout": "30s",        # How long to wait for: nvme connect -t tcp -n nqn -a 10.242.64.32
+#     "disconnectTimeout": "10s",     # How long to wait for: nvme disconnect -n nqn
+#     "discoveryTimeout": "15s",      # How long to wait for: nvme discover -t tcp -a 10.242.64.32
+#     "retryCount": 3,                # How many times to retry failed nvme commands
+#     "keepAliveTimeout": 30,         # NVMe keep-alive interval (seconds)
+#     "reconnectDelay": 2,            # Delay between connection retry attempts
+#     "queueDepth": 128,              # NVMe I/O queue depth
+#     "numQueues": 4                  # Number of NVMe I/O queues
+#   },
+#   "filesystem": {
+#     "mountTimeout": "30s",          # How long to wait for: mount /dev/nvme0n1 /path
+#     "unmountTimeout": "30s",        # How long to wait for: umount /path  
+#     "formatTimeout": "60s",         # How long to wait for: mkfs.ext4 /dev/nvme0n1
+#     "fsckTimeout": "120s",          # How long to wait for: fsck /dev/nvme0n1
+#     "defaultMountOptions": [        # Default mount options for filesystems
+#       "defaults",
+#       "noatime"
+#     ],
+#     "forceUnmount": true            # Use umount -f if normal umount times out
+#   },
+#   "device": {
+#     "deviceWaitTimeout": "60s",     # How long to wait for /dev/nvme0n1 to appear
+#     "deviceScanInterval": "1s",     # How often to check for device appearance
+#     "udevSettle": true,             # Run udevadm settle after device operations
+#     "udevTimeout": "10s"            # How long to wait for udev to settle
+#   },
+#   "logging": {
+#     "level": "info",                # Logging level: debug, info, warn, error
+#     "logPath": "/var/log/nvmeof-csi-node.log",  # Where to write logs
+#     "maxLogSize": "100MB",          # Max log file size before rotation
+#     "maxLogFiles": 5                # Number of log files to keep
+#   },
+#   "monitoring": {
+#     "enableMetrics": true,          # Enable Prometheus metrics
+#     "metricsPort": 9090,            # Port for metrics endpoint
+#     "healthCheckPort": 9091         # Port for health check endpoint
+#   },
+#   "security": {
+#     "allowedTargetAddresses": [     # Only allow connections to these targets
+#       "10.242.64.32",
+#       "10.242.64.33"
+#     ],
+#     "requireTLS": false,            # Whether to require TLS for NVMe-TCP
+#     "validateCertificates": true    # Whether to validate TLS certificates
+#   }
+# }

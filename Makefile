@@ -30,7 +30,7 @@ KUBECONFIG ?= ~/.kube/config
 
 # Directories
 BUILD_DIR := build
-DEPLOY_DIR := deploy
+DEPLOY_DIR := deploy/kubernetes
 SCRIPTS_DIR := scripts
 CMD_DIR := cmd
 
@@ -56,27 +56,6 @@ deps: ## Install development dependencies
 	go mod download
 	go mod verify
 
-.PHONY: generate
-generate: ## Generate code (protobuf, mocks, etc.)
-	@echo -e "$(BLUE)Generating code...$(NC)"
-	go generate ./...
-
-.PHONY: fmt
-fmt: ## Format Go code
-	@echo -e "$(BLUE)Formatting code...$(NC)"
-	go fmt ./...
-	goimports -w .
-
-.PHONY: vet
-vet: ## Run go vet
-	@echo -e "$(BLUE)Running go vet...$(NC)"
-	go vet ./...
-
-.PHONY: lint
-lint: ## Run golangci-lint
-	@echo -e "$(BLUE)Running linter...$(NC)"
-	golangci-lint run
-
 ##@ Building
 
 .PHONY: build-binary
@@ -88,17 +67,7 @@ build-binary: ## Build the binary
 		-o $(BUILD_DIR)/$(PROJECT_NAME)-$(GOOS)-$(GOARCH) \
 		./$(CMD_DIR)/
 
-.PHONY: build-binary-all
-build-binary-all: ## Build binaries for common platforms
-	@echo -e "$(BLUE)Building binaries for common platforms...$(NC)"
-	@mkdir -p $(BUILD_DIR)
-	GOOS=linux GOARCH=amd64 $(MAKE) build-binary
-	GOOS=linux GOARCH=arm64 $(MAKE) build-binary
-	GOOS=darwin GOARCH=amd64 $(MAKE) build-binary
-	GOOS=darwin GOARCH=arm64 $(MAKE) build-binary
-	@echo -e "$(GREEN) All binaries built$(NC)"
-
-.PHONY: build
+.PHONY: build-docker
 build: ## Build Docker image for current platform
 	@echo -e "$(BLUE)Building Docker image: $(FULL_IMAGE) ($(GOARCH))$(NC)"
 	docker build \
@@ -107,20 +76,20 @@ build: ## Build Docker image for current platform
 		-t $(FULL_IMAGE) .
 	@echo -e "$(GREEN) Image built: $(FULL_IMAGE)$(NC)"
 
-.PHONY: build-latest
+.PHONY: build-docker-latest
 build-latest: ## Build and tag as latest
 	$(MAKE) build IMAGE_TAG=latest
 	docker tag $(IMAGE_NAME):latest $(FULL_IMAGE)
 
 ##@ Registry
 
-.PHONY: push
+.PHONY: push-docker
 push: ## Push image to registry
 	@echo -e "$(BLUE)Pushing image: $(FULL_IMAGE)$(NC)"
 	docker push $(FULL_IMAGE)
 	@echo -e "$(GREEN) Image pushed: $(FULL_IMAGE)$(NC)"
 
-.PHONY: push-latest
+.PHONY: push-docker-latest
 push-latest: ## Push latest tag
 	$(MAKE) push IMAGE_TAG=latest
 
@@ -143,89 +112,30 @@ minikube-clean: ## Clean up Minikube
 .PHONY: deploy
 deploy: ## Deploy CSI driver to Kubernetes
 	@echo -e "$(BLUE)Deploying CSI driver...$(NC)"
-	$(SCRIPTS_DIR)/deploy.sh deploy
+	$(DEPLOY_DIR)/deploy.sh
 
 .PHONY: undeploy
 undeploy: ## Remove CSI driver from Kubernetes
 	@echo -e "$(BLUE)Removing CSI driver...$(NC)"
-	$(SCRIPTS_DIR)/deploy.sh teardown
-
-.PHONY: redeploy
-redeploy: undeploy deploy ## Redeploy CSI driver
-
-.PHONY: status
-status: ## Show deployment status
-	$(SCRIPTS_DIR)/deploy.sh status
-
-.PHONY: logs
-logs: ## Show CSI driver logs
-	$(SCRIPTS_DIR)/deploy.sh logs
+	$(DEPLOY_DIR)/deploy.sh teardown
 
 ##@ Testing
 
-.PHONY: test-unit
-test-unit: ## Run unit tests
-	@echo -e "$(BLUE)Running unit tests...$(NC)"
-	go test -v -race -coverprofile=coverage.out ./...
-
-.PHONY: test-integration
-test-integration: ## Run integration tests
-	@echo -e "$(BLUE)Running integration tests...$(NC)"
-	$(SCRIPTS_DIR)/test.sh test
-
-.PHONY: test
-test: test-unit test-integration ## Run all tests
-
-.PHONY: test-cleanup
-test-cleanup: ## Clean up test resources
-	$(SCRIPTS_DIR)/test.sh cleanup
-
 ##@ Development Workflows
 
-.PHONY: dev-setup
-dev-setup: minikube-setup ## Complete development setup
-	@echo -e "$(GREEN) Development environment ready!$(NC)"
-
-.PHONY: dev-deploy
-dev-deploy: build push deploy ## Build, push, and deploy
-	@echo -e "$(GREEN) Development deployment complete!$(NC)"
-
-.PHONY: dev-test
-dev-test: dev-deploy test-integration ## Deploy and test in development
-
-.PHONY: dev-clean
-dev-clean: undeploy minikube-clean ## Clean development environment
-
 ##@ Release
-
-.PHONY: release-build
-release-build: ## Build release artifacts
-	$(MAKE) build IMAGE_TAG=$(VERSION)
-	$(MAKE) build IMAGE_TAG=latest
-
-.PHONY: release-push
-release-push: ## Push release images
-	$(MAKE) push IMAGE_TAG=$(VERSION)
-	$(MAKE) push IMAGE_TAG=latest
-
-.PHONY: release
-release: release-build release-push ## Build and push release
 
 ##@ Cleanup
 
 .PHONY: clean
-clean: ## Clean up build artifacts
+clean: ## Clean up build artifacts and Docker images
 	@echo -e "$(BLUE)Cleaning up...$(NC)"
 	rm -rf $(BUILD_DIR)
 	go clean -cache
-	docker system prune -f
-	@echo -e "$(GREEN) Cleanup complete$(NC)"
-
-.PHONY: clean-images
-clean-images: ## Remove Docker images
-	@echo -e "$(BLUE)Removing Docker images...$(NC)"
 	docker rmi $(FULL_IMAGE) 2>/dev/null || true
 	docker rmi $(IMAGE_NAME):latest 2>/dev/null || true
+	docker system prune -f
+	@echo -e "$(GREEN) Cleanup complete$(NC)"
 
 ##@ Information
 

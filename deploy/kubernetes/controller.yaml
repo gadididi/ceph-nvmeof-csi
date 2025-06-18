@@ -6,6 +6,7 @@ kind: StatefulSet
 apiVersion: apps/v1
 metadata:
   name:  nvmeof-csi-controller
+  namespace: kube-system
 spec:
   serviceName: nvmeof-csi-controller
   replicas: 1

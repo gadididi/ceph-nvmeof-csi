@@ -10,3 +10,5 @@ spec:
   attachRequired: true
   volumeLifecycleModes:
   - Persistent
+  storageCapacity: true   # Kubernetes knows how much space is available
+

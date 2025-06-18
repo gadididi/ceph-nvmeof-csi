@@ -2,6 +2,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nvmeof-csi-controller-sa
+  namespace: kube-system
 
 ---
 kind: ClusterRole
@@ -33,7 +34,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: nvmeof-csi-controller-sa
-  namespace: default
+  namespace: kube-system
 roleRef:
   kind: ClusterRole
   name: nvmeof-csi-provisioner-role

@@ -2,4 +2,4 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: nvmeof-csi-node-sa
-  namespace: default
+  namespace: kube-system

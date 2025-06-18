@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # list in creation order
-files=(driver config-map controller-rbac node-rbac controller node storageclass)
+files=(driver config-map node-config-map controller-rbac node-rbac controller node storageclass)
 
 if [ "$1" = "teardown" ]; then
 	# delete in reverse order
